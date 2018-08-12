@@ -57,7 +57,7 @@ NEWS_API_KEY=YOUR-KEY-HERE
 ./news.js sources -v
 ```
 
-### Everything
+### [Everything](https://newsapi.org/docs/endpoints/everything)
 
 #### Usage
 `everything [options] [query]`
