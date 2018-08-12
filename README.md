@@ -8,7 +8,7 @@ Provides three commands:
 
 ## Getting Started
 
-### Make `news.js` executable:
+### Make `news.js` executable
 ```
 computer-1:repositories user$ cd news-api-cli
 computer-1:news-api-cli user$ chmod +x news.js
