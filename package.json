@@ -9,9 +9,10 @@
   "keywords": [
     "news"
   ],
-  "author": "Jason Belmonti <jasonbelmonti@gmail.com> (http://www.byteblink.com/)",
+  "author": "Jason Belmonti <jasonbelmonti@gmail.com>",
   "license": "ISC",
   "dependencies": {
+    "colors": "^1.3.1",
     "commander": "^2.17.1",
     "dotenv": "^6.0.0",
     "newsapi": "^2.3.0"

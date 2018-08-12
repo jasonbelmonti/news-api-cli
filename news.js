@@ -1,6 +1,13 @@
 #!/usr/bin/env node
 const configed = require('dotenv').config();
 
+// output colors
+// https://www.npmjs.com/package/colors
+const colors = require('colors/safe');
+
+// file system
+const fs = require('fs');
+
 // Use the unofficial Node.js client library to integrate News API into your Node.js application
 // without worrying about what's going on under the
 // hood.https://newsapi.org/docs/client-libraries/node-js
@@ -29,23 +36,23 @@ function resultPrinter(keyName, props, verboseProps) {
 
     data.forEach(function(datum) {
       props.forEach(function(prop) {
-        console.log(datum[prop])
+        console.log(`${prop}: ${datum[prop]}`);
       });
 
       if(verbose) {
         verboseProps.forEach(function(prop) {
-          console.log(datum[prop]);
+          console.log(`${prop}: ${datum[prop]}`);
         });
       }
 
-      console.log('--------------------');
+      console.log(colors.gray('--------------------'));
     });
 
     console.log(`RESULTS PROCESSED: ${data.length}`);
 
     if(write) {
       fs.writeFileSync(write, JSON.stringify(result), 'utf8');
-      console.log(`SAVE LOCATION: ${write}`);
+      console.log(colors.inverse(`SAVED TO: ${write}`));
     }
   }
 }
@@ -145,18 +152,16 @@ class News {
         let merged = result;
 
         if(Array.isArray(result)) {
-          let mergedArticles = [];
-
-
-          result.forEach(({ articles }) => {
-            mergedArticles = mergedArticles.concat(articles);
-          });
-
           merged = {
             status: 'ok',
             totalResults: result[0].totalResults,
-            articles: mergedArticles
+            articles: []
           };
+
+          result.reduce((acc, { articles }) => {
+            acc.articles = acc.articles.concat(articles);
+            return acc;
+          }, merged);
         }
 
         resultPrinter('articles', [
@@ -167,6 +172,9 @@ class News {
         ])(merged, verbose, write);
 
         console.log(`TOTAL RESULTS: ${merged.totalResults}`);
+      })
+      .catch((e) => {
+        console.log(e);
       });
     });
   }
