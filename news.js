@@ -59,8 +59,6 @@ function resultPrinter(keyName, props, verboseProps) {
 
 class News {
   constructor(program) {
-    if(program)
-
     // https://newsapi.org/docs/endpoints/sources
     this._registerSources(program);
 
