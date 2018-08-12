@@ -20,7 +20,7 @@ const program = require('commander');
 const apiKey = process.env.NEWS_API_KEY;
 
 if(apiKey === undefined) {
-  console.error('no textrazor api key defined in environment variable TEXTRAZOR_API_KEY');
+  console.error('no News API key defined in environment variable NEWS_API_KEY');
   process.exit(1);
 }
 
