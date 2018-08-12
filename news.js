@@ -9,8 +9,8 @@ const colors = require('colors/safe');
 const fs = require('fs');
 
 // Use the unofficial Node.js client library to integrate News API into your Node.js application
-// without worrying about what's going on under the
-// hood.https://newsapi.org/docs/client-libraries/node-js
+// without worrying about what's going on under the hood.
+// https://newsapi.org/docs/client-libraries/node-js
 const NewsAPI = require('newsapi');
 
 // node.js command-line interfaces made easy
@@ -48,7 +48,7 @@ function resultPrinter(keyName, props, verboseProps) {
       console.log(colors.gray('--------------------'));
     });
 
-    console.log(`RESULTS PROCESSED: ${data.length}`);
+    console.log(colors.green.bold(`RESULTS PROCESSED: ${data.length}`));
 
     if(write) {
       fs.writeFileSync(write, JSON.stringify(result), 'utf8');
@@ -165,13 +165,13 @@ class News {
         }
 
         resultPrinter('articles', [
-          'author',
-          'title'
+          'title',
+          'author'
         ], [
           'url'
         ])(merged, verbose, write);
 
-        console.log(`TOTAL RESULTS: ${merged.totalResults}`);
+        console.log(colors.green.bold(`TOTAL RESULTS: ${merged.totalResults}`));
       })
       .catch((e) => {
         console.log(e);
