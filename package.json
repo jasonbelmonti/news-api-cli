@@ -1,6 +1,6 @@
 {
   "name": "@jasonbelmonti/news-api-cli",
-  "version": "0.0.5-pre",
+  "version": "0.0.5",
   "description": "command line interface to News API (https://newsapi.org/)",
   "main": "news.js",
   "scripts": {
