@@ -1,0 +1,19 @@
+{
+  "name": "newsapi-cli",
+  "version": "0.0.1",
+  "description": "command line interface to News API (https://newsapi.org/)",
+  "main": "news.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "news"
+  ],
+  "author": "Jason Belmonti <jasonbelmonti@gmail.com> (http://www.byteblink.com/)",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^2.17.1",
+    "dotenv": "^6.0.0",
+    "newsapi": "^2.3.0"
+  }
+}
