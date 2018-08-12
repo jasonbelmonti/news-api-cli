@@ -7,10 +7,21 @@ Provides three commands:
 + **TODO**: implement `top-headlines` to wrap [/top-headlines](https://newsapi.org/docs/endpoints/top-headlines)
 
 ## Getting Started
-Make `news.js` executable:
+
+### Make `news.js` executable:
 ```
 computer-1:repositories user$ cd news-api-cli
 computer-1:news-api-cli user$ chmod +x news.js
+```
+
+### Add News API Key
+Get a key [here](https://newsapi.org/register)).
+
+Add a file called `.env` in the project root containing your News API key.
+
+```
+// contents of news-api-cli/.env
+NEWS_API_KEY=YOUR-KEY-HERE
 ```
 
 ## Commands
