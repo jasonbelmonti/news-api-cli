@@ -17,6 +17,7 @@ const NewsAPI = require('newsapi');
 // https://www.npmjs.com/package/commander
 const program = require('commander');
 
+const MAX_PAGE_SIZE = 100;
 const apiKey = process.env.NEWS_API_KEY;
 
 if(apiKey === undefined) {
@@ -27,12 +28,22 @@ if(apiKey === undefined) {
 // expects the NEWS_API_KEY environment variable to be set to the value of your API key.
 const newsapi = new NewsAPI(apiKey);
 
-const MAX_PAGE_SIZE = 100;
+function clean(obj) {
+  for (var propName in obj) {
+    if (obj[propName] === null || obj[propName] === undefined) {
+      delete obj[propName];
+    }
+  }
+}
 
-// this is really more of a "result printer"
 function resultPrinter(keyName, props, verboseProps) {
   return function(result, verbose, write) {
     const data = result[keyName];
+
+    if(!data) {
+      console.error(colors.red('no articles present in the response'))
+      throw new Error('no articles present in the response')
+    }
 
     data.forEach(function(datum) {
       props.forEach(function(prop) {
@@ -64,17 +75,40 @@ class News {
 
     // https://newsapi.org/docs/endpoints/everything
     this._registerEverything(program);
+
+    // https://newsapi.org/docs/endpoints/top-headlines
+    this._registerTopHeadlines(program);
   }
 
-  everything(params, pages = 1, pageSize = 20) {
+  everything(params) {
+    return this._paginatedEndpoint('everything', params);
+  }
+
+  topHeadlines(params) {
+    return this._paginatedEndpoint('topHeadlines', params);
+  }
+
+  sources(params) {
+   return newsapi.v2.sources(params);
+  }
+
+  _paginatedEndpoint(name, params) {
+    // remove undefined values so they are not coerced to strings
+    clean(params);
+    const { page = 1 } = params;
+
     // make a single request if we know there's only one page
-    if (pages === 1) {
-      return newsapi.v2.everything(Object.assign({}, { page: pages, pageSize }, params));
-    } else if (pages > 1) {
+    if (page === 1) {
+      return newsapi.v2[name](params);
+    } else if (page > 1) {
       let promises = [];
 
       for(let i = 0; i < pages; i++) {
-        const req = newsapi.v2.everything(Object.assign({}, { page: (i + 1), pageSize }, params));
+        apiParams = Object.assign({ page: (i + 1), pageSize }, params);
+
+        delete params. pages;
+
+        const req = newsapi.v2[name](apiParams);
         promises.push(req);
       }
 
@@ -82,8 +116,30 @@ class News {
     }
   }
 
-  sources(params) {
-   return newsapi.v2.sources(params);
+  _paginatedResponse(result, verbose, write) {
+    let merged = result;
+
+    if(Array.isArray(result)) {
+      merged = {
+        status: 'ok',
+        totalResults: result[0].totalResults,
+        articles: []
+      };
+
+      result.reduce((acc, { articles }) => {
+        acc.articles = acc.articles.concat(articles);
+        return acc;
+      }, merged);
+    }
+
+    resultPrinter('articles', [
+      'title',
+      'author'
+    ], [
+      'url'
+    ])(merged, verbose, write);
+
+    console.log(colors.green.bold(`TOTAL RESULTS: ${merged.totalResults}`));
   }
 
   _registerSources(program) {
@@ -115,6 +171,7 @@ class News {
     .option('-f, --from [from]', 'Articles published after date This should be in ISO 8601 format (e.g. 2018-07-07 or 2018-07-07T01:07:36)')
     .option('-t, --to [to]', 'Articles published before date. This should be in ISO 8601 format (e.g. 2018-07-07 or 2018-07-07T01:07:36)')
     .option('-s, --sources <sources>', 'A list of comma-separated news source ids', val => val.split(','))
+    .option('-d, --domains <domains>', 'A list of comma-separated whitelisted domains', val => val.split(','))
     .option('-p, --pages <pages>', 'Number of pages to fetch', parseInt)
     .option('-z, --page-size <pageSize>', 'Number of results per page (max 100)', parseInt)
     .option('-v, --verbose', 'If enabled, show url')
@@ -124,6 +181,7 @@ class News {
     .action((query, options) => {
       const {
         sources,
+        domains,
         language,
         order,
         write,
@@ -142,34 +200,53 @@ class News {
           language,
           from,
           to,
-          sortBy: order
-        },
-        pages,
-        pageSize
-      ).then((result) => {
-        let merged = result;
-
-        if(Array.isArray(result)) {
-          merged = {
-            status: 'ok',
-            totalResults: result[0].totalResults,
-            articles: []
-          };
-
-          result.reduce((acc, { articles }) => {
-            acc.articles = acc.articles.concat(articles);
-            return acc;
-          }, merged);
+          sortBy: order,
+          page: pages,
+          pageSize
         }
+      )
+      .then((result) => {
+        this._paginatedResponse(result, verbose, write);
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+    });
+  }
 
-        resultPrinter('articles', [
-          'title',
-          'author'
-        ], [
-          'url'
-        ])(merged, verbose, write);
+  _registerTopHeadlines(program) {
+    program
+    .command('topHeadlines [query]')
+    .option('-u, --country [country]', 'Only return articles relevant to this category')
+    .option('-c, --category [category]', 'Only return articles relevant to this category')
+    .option('-s, --sources <sources>', 'A list of comma-separated news source ids', val => val.split(','))
+    .option('-p, --pages <pages>', 'Number of pages to fetch', parseInt)
+    .option('-z, --page-size <pageSize>', 'Number of results per page (max 100)', parseInt)
+    .option('-v, --verbose', 'If enabled, show url')
+    .option('-w, --write [path]', 'Save the result to [path]')
+    .action((query, options) => {
+      const {
+        country,
+        category,
+        sources,
+        pages,
+        pageSize,
+        verbose,
+        write
+      } = options;
 
-        console.log(colors.green.bold(`TOTAL RESULTS: ${merged.totalResults}`));
+      this.topHeadlines(
+        {
+          q: encodeURIComponent(query),
+          sources,
+          country,
+          category,
+          page: pages,
+          pageSize
+        }
+      )
+      .then((result) => {
+        this._paginatedResponse(result, verbose, write);
       })
       .catch((e) => {
         console.log(e);
@@ -179,8 +256,8 @@ class News {
 }
 
 // configuration
-const package = require('./package.json');
-program.version(package.version);
+const { version } = require('./package.json');
+program.version(version);
 
 const news = new News(program);
 program.parse(process.argv);
